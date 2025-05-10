@@ -1,0 +1,137 @@
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Personnel { 
+	public static void main(String[] args) {
+		ArrayList<Employee> employees = new ArrayList<>(); // initializes ArrayList to store employee records
+		Scanner scanner = new Scanner(System.in); // creates Scanner to read user input 
+
+		while(true) { // infinite loop to display menu 
+			printMenu();
+			System.out.print("Enter command: ");
+			
+			String command = scanner.nextLine().trim().toLowerCase(); // reads user input 
+			
+			if(command.equals("n")) {
+				addEmployee(employees, scanner); // adds new employee to ArrayList
+			} else if(command.equals("c")) {
+				computePaychecks(employees, scanner); // computes paychecks for employees
+			} else if(command.equals("r")) {
+				raiseWages(employees, scanner); // raises wages for employees
+			} else if(command.equals("p")) {
+				printRecords(employees); // prints employee records 
+			} else if(command.equals("d")) {
+				saveData(employees); // saves data to file 
+			} else if(command.equals("u")) {
+				loadData(employees); // loads data from file 
+			} else if(command.equals("q")) {
+				break; // exits program
+			} else {
+				System.out.println("Command was not recognized; please try again.");
+			}
+		}
+	}
+
+	// prints menu
+	private static void printMenu() {
+		System.out.println("-----------------------------------");
+		System.out.println("| Commands: n - New employee      |");
+		System.out.println("|           c - Compute paychecks |");
+		System.out.println("|           r - Raise wages       |");
+		System.out.println("|           p - Print records     |");
+		System.out.println("|           d - Download data     |");
+		System.out.println("|           u - Upload data       |");
+		System.out.println("|           q - Quit              |");
+		System.out.println("-----------------------------------");
+	}
+	
+	// adds employee to ArrayList 
+	private static void addEmployee(ArrayList<Employee> employees, Scanner scanner) {
+		System.out.print("Enter the name of the new employee: ");
+		String name = scanner.nextLine().trim(); // takes user input 
+		System.out.print("Hourly (h) or salaried (s): ");
+		String type = scanner.nextLine().trim().toLowerCase(); // takes user input 
+
+		if(type.equals("h")) {
+			System.out.print("Enter hourly wage: ");
+			double hourlyWage = Double.parseDouble(scanner.nextLine().trim()); // takes user input 
+			employees.add(new HourlyEmployee(name, hourlyWage));
+		} else if(type.equals("s")) {
+			System.out.print("Enter annual salary: ");
+			double annualSalary = Double.parseDouble(scanner.nextLine().trim()); // takes user input 
+			employees.add(new SalariedEmployee(name, annualSalary));
+		} else {
+			System.out.println("Input was not 'h' or 's'; please try again.");
+		}
+	}
+
+	// compute paychecks for employees 
+	private static void computePaychecks(ArrayList<Employee> employees, Scanner scanner) {
+		for (Employee employee : employees) {
+			System.out.print("Enter number of hours worked by " + employee.getName() + ": ");
+			int hoursWorked = Integer.parseInt(scanner.nextLine().trim()); // takes user input 
+			double pay = employee.computePay(hoursWorked);
+			System.out.printf("Pay: $%.2f%n", pay);
+		}
+	}
+
+	// raise wages for employees
+	private static void raiseWages(ArrayList<Employee> employees, Scanner scanner) {
+		System.out.print("Enter percentage increase: ");
+		double percentage = Double.parseDouble(scanner.nextLine().trim()); // takes user input 
+		
+		System.out.println("New Wages");
+		System.out.println("---------");
+		for (Employee employee : employees) { // iterates through ArrayList 
+			if(employee instanceof HourlyEmployee) { // increases hourly wage 
+				HourlyEmployee hourlyEmployee = (HourlyEmployee) employee; 
+				hourlyEmployee.increaseHourlyWage(percentage);
+				System.out.println(hourlyEmployee.toString());
+			} else if(employee instanceof SalariedEmployee) { // increases annual salary 
+				SalariedEmployee salariedEmployee = (SalariedEmployee) employee;
+				double newAnnualSalary = salariedEmployee.getAnnualSalary() * (1 + (percentage / 100));
+				salariedEmployee.setAnnualSalary(newAnnualSalary);
+				System.out.println(salariedEmployee.toString());
+			}
+		}
+	}
+
+	// prints employee records 
+	private static void printRecords(ArrayList<Employee> employees) {
+		for (Employee employee : employees) { // iterates through ArrayList 
+			System.out.println(employee.toString());
+		}
+	}
+
+	// saves data to "employee.dat" file 
+	private static void saveData(ArrayList<Employee> employees) {
+		String fileName = "employee.dat";
+		try {
+			FileOutputStream fileIn = new FileOutputStream(fileName);
+			ObjectOutputStream in = new ObjectOutputStream(fileIn);
+			in.writeObject(employees);
+			in.close();
+			System.out.println("Data saved to 'employee.dat'");
+		} catch (IOException e) {
+			System.out.println("Error saving data: " + e.getMessage());
+		}
+	}
+
+	// loads data from "employee.dat" file
+	private static void loadData(ArrayList<Employee> employees) {
+		String fileName = "employee.dat";
+		try {
+			FileInputStream fileOut = new FileInputStream(fileName);
+			ObjectInputStream out = new ObjectInputStream(fileOut);
+			ArrayList<Employee> loadedEmployees = (ArrayList<Employee>) out.readObject();
+			out.close();
+			employees.addAll(loadedEmployees);
+			System.out.println("Data loaded from 'employee.dat'");
+		} catch(IOException e) {
+			System.out.println("Error loading data: " + e.getMessage());
+		} catch(ClassNotFoundException e) {
+			System.out.println("Error loading data: " + e.getMessage());
+		}
+	}
+}
